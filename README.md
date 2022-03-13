@@ -1,4 +1,6 @@
-> A Bingyan Internship task. Good luck to me : D
+
+
+> A Bingyan Internship task. Good luck to me.
 
 # bangumoe的OAuth2.0服务 
 
@@ -30,13 +32,7 @@ tips：关于密码，⼀般不应该以明⽂直接保存
 
 要求为：第三⽅⽹站可以在bangumoe注册OAuth2.0服务，需要提供服务名、bangumoe的主⻚链接、应⽤描述、回调链接（具体可以参考Github的OAuth2.0服务） 
 
-注册完毕后提供 Client ID ，第三⽅⽹站的管理者需要⼿动⽣成 Client secrets⽤⼾在第三⽅⽹站跳转到bengumoe的登录界⾯时，会以json 的形式传来 Client ID 和 回调链接 ,如： 
-
-bangumoe需要规范处理这些数据，redirect并返回code 。 
-
-登录的API你已拥有，你还需要提供获取 token 的API以及获取⽤⼾信息的API。 
-
-第三⽅⽹站在处理⽤⼾登录时会以 json 的形式传来Client ID 、 Client secrets 和 code ，如： 
+注册完毕后提供 Client ID ，第三⽅⽹站的管理者需要⼿动⽣成 Client secrets⽤⼾在第三⽅⽹站跳转到bengumoe的登录界⾯时，会以json 的形式传来 Client ID 和 回调链接 ,如：
 
 ```
 { 
@@ -47,14 +43,27 @@ bangumoe需要规范处理这些数据，redirect并返回code 。
 
 direct" 
 
+} 
+```
+
+bangumoe需要规范处理这些数据，redirect并返回code 。 
+
+登录的API你已拥有，你还需要提供获取 token 的API以及获取⽤⼾信息的API。 
+
+第三⽅⽹站在处理⽤⼾登录时会以 json 的形式传来Client ID 、 Client secrets 和 code ，如：
+
+```
+{ 
+"client_id":"4bce48389e6f4b6d955k",
+"redirect_url":"http: / w.xxx.com/oauth/re direct"
 }
 ```
 
-bangumoe需要规范处理这些数据，如果合法，则向第三⽅⽹站提供对应⽤⼾的 token。 
+ bangumoe需要规范处理这些数据，如果合法，则向第三⽅⽹站提供对应⽤⼾的 token。 
 
 ## 阶段三 稀有
 
-基本要求 
+**基本要求** 
 
 简单的⽤⼾信息并没有什么实际意义。为了让它看上去有点⽤，你需要参考bangumi，提供⼀个番剧收藏功能。 
 
@@ -66,7 +75,7 @@ bangumoe需要规范处理这些数据，如果合法，则向第三⽅⽹站提
 
 （私货，顺便安利⼀⼿双城之战） 
 
-进阶内容 
+**进阶内容** 
 
 ⽤⼾可以添加其他⽤⼾为好友，在添加后，好友在收藏或评价番剧时，⽤⼾都能看到对应信息。
 
@@ -78,10 +87,8 @@ bangumoe需要规范处理这些数据，如果合法，则向第三⽅⽹站提
 
 经过⼀番努⼒bangumoe终于可以⽤了，bangumoe上线后⽤⼾向⼩l抱怨：爷为啥要⾃⼰把数据再保存⼀遍到你这个烂平台啊！ 
 
-⼩l猛然发现bangumi提供了⾃⼰的api：https: /git hub.com/bangumi/api。 
+⼩l猛然发现bangumi提供了⾃⼰的api：https: //git hub.com/bangumi/api。 
 
 为了让⼴⼤阿宅更好地追番，⼩l需要你的服务提供绑定bangumi账号的API，在绑定之后，将bangumi的对应数据同步到对应⽤⼾的数据中。 
 
 tips:本质上核⼼功能就是做⼀个OAuth2.0的客⼾端。 
-
-（编题者确实没有⽤过bangumi的OAuth，如果这个阶段遇到了什么奇怪的问题，建议不要死磕，告诉编题者，因为可能是真的不能实现） 

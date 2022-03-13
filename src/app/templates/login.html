@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<h2>登录至 Bangumoe</h2>
+<form method="POST">
+<p>你的email地址：</p>
+<!--<input name="username">-->
+<p>{{form.email}} {{form.email.errors[0] }}</p>
+<p>你的密码：</p>
+<!--<input name="password" type="password">-->
+<p> {{form.pword}} {{form.pword.errors[0] }}</p>
+<input type="submit" value="提交">
+</form>
+<p>还没有 Bangumi 账户？<a href="http://127.0.0.1:5000/signup">立即注册</a></p>
+</body>
+</html>

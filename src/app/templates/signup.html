@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<h2>注册成为 Bangumoe 会员</h2>
+	<p>一起来moe吧 _(:з」∠)_ </p>
+<form action="/signup" method="POST">
+
+<p>你的email地址：</p>
+<!--input name="username"-->
+<p>{{form.email}} {{form.email.errors[0] }}</p>
+
+<p>设置一个密码：</p>
+<!--<p><input name="password" type="password"></p>-->
+<p> {{form.pword}} {{form.pword.errors[0] }}</p>
+
+<p>确认密码：</p>
+<!--<p><input name="password_re" type="password"></p>-->
+<p> {{form.pword_re}} {{form.pword_re.errors[0] }}</p>
+
+<p>设置一个昵称（3~8字）：</p>
+<!--<p><input name="nickname"></p>-->
+<p> {{form.nickname}} {{form.nickname.errors[0] }}</p>
+
+<input type="submit" value="注册会员">
+<!--<p><button type="submit">注册会员</button></p>-->
+</form>
+<p>已经注册过 Bangumoe 账户？<a href="http://127.0.0.1:5000/login">立即登录</a></p>
+</body>
+</html>

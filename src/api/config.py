@@ -1,4 +1,0 @@
-DEBUG = False
-TESTING = False
-SECRET_KEY = b"A_VERY_SECRET_BYTES"
-LOGGER_NAME = "appname"
