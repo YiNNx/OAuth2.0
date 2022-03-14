@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 ' 关于Flask类对象的设置 '
 
 __author__ = 'YiNN'

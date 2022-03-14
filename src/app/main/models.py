@@ -1,13 +1,10 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 ' SQLAlchemy模型类 '
 
 __author__ = 'YiNN'
 
-from email.policy import default
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
+
 app = Flask(__name__)
 
 # 设置数据库的链接信息
@@ -23,20 +20,19 @@ class Users(db.Model):
     uid = db.Column(db.Integer, primary_key=True,autoincrement=True)
     uname = db.Column(db.String(32),nullable=False,unique=True)
     email = db.Column(db.String(64),nullable=False,unique=True)
-    pword_hash = db.Column(db.String(64),nullable=False,index=True)
+    pword_hash = db.Column(db.String(511),nullable=False,index=True)
 
 class Info(db.Model):
     __tablename__ = "info"
-    uid = db.Column(db.Integer, primary_key=True,autoincrement=False)
+    uid = db.Column(db.Integer, primary_key=True,autoincrement=True)
     uname = db.Column(db.String(32),nullable=False)
-    email = db.Column(db.String(64),nullable=False)
+    email = db.Column(db.String(511),nullable=False)
     nickname = db.Column(db.String(32),nullable=False)
     avator = db.Column(db.String(64))
+    intro = db.Column(db.String(200))
+
+
 
 if __name__ == '__main__':
-
-    # 使用db对象创建表
-    db.create_all()
-
     app.run(debug=True)
 

@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 ' wtf表单 '
 
 __author__ = 'YiNN'
@@ -64,3 +61,42 @@ class SignUpForm(Form):
         ],
         render_kw={"class":"form-control"}  #设置属性生成的html属性
     )
+
+class InfoForm(Form):
+    '''Form'''
+    
+    email = simple.StringField(
+        widget=widgets.TextInput(),
+        validators=[
+            validators.DataRequired(message="不能为空(ﾟДﾟ*)ﾉ"),
+            validators.Email(message="请输入正确的Email格式(ﾟДﾟ*)ﾉ"),
+        ],
+        render_kw={"class":"form-control"}  #设置属性生成的html属性
+    )
+
+    nickname = simple.StringField(
+        widget=widgets.TextInput(),
+        validators=[
+            validators.DataRequired(message="不能为空(ﾟДﾟ*)ﾉ"),
+            validators.Length(max=8,min=3,message="昵称须大于%(max)d字且小于%(min)d字(ﾟДﾟ*)ﾉ")
+        ],
+        render_kw={"class":"form-control"}  #设置属性生成的html属性
+    )
+
+    avator = simple.StringField(
+        widget=widgets.TextInput(),
+        validators=[
+            validators.DataRequired(message="不能为空(ﾟДﾟ*)ﾉ")
+        ],
+        render_kw={"class":"form-control"}  #设置属性生成的html属性
+    )
+
+    intro = simple.StringField(
+        widget=widgets.TextInput(),
+        validators=[
+            validators.DataRequired(message="不能为空(ﾟДﾟ*)ﾉ"),
+        ],
+        render_kw={"class":"form-control"}  #设置属性生成的html属性
+    )
+
+    

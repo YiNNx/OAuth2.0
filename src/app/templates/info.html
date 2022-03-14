@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>修改个人信息</h2>
+<form action="/info" method="POST">
+
+<p>确认你的email地址：</p>
+<!--input name="username"-->
+<p>{{form.email}} {{form.email.errors[0] }}</p>
+
+<p>修改昵称：</p>
+<!--<p><input name="password" type="password"></p>-->
+<p> {{form.nickname}} {{form.nickname.errors[0]}}</p>
+
+<p>修改头像（输入图片地址）：</p>
+<!--<p><input name="password_re" type="password"></p>-->
+<p> {{form.avator}} {{form.avator.errors[0]}}</p>
+
+<p>修改简介：</p>
+<!--<p><input name="nickname"></p>-->
+<p> {{form.intro}} {{form.intro.errors[0] }}</p>
+
+<input type="submit" value="修改">
+<!--<p><button type="submit">注册会员</button></p>-->
+</form>
+</body>
+</html>

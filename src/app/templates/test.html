@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajax测试</title>
+    <script src="script/jquery-1.7.1.js"></script>
+</head>
+<body>
+    <input id="AjaxBtn" type="button" value="测试Ajax"/>
+    <div>
+        <p>返回结果：<span id="resultView"></span></p>
+    </div>
+    <script type="text/javascript">
+        $(function () {
+            $('#AjaxBtn').click(function () {
+                $.ajax({
+          url:'http://127.0.0.1:5000/sendDate',
+   
+       data:"title="+data.field['title']+"&datetime="+data.field['datetime']+"&quiz="+data.field['quiz'],
+          type:'post',
+          dataType:'json',
+          success:function(data){ //后端返回的json数据（此处data为json对象）
+              alert(data['errmsg']);
+          },
+          error:function () {
+              alert('异常')
+          }
+      });
+
+            });
+        });
+    </script>
+</body>
+</html>
