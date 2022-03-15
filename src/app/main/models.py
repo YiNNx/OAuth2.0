@@ -41,13 +41,14 @@ class OAuth(db.Model):
     clientID = db.Column(db.String(255))
     secrets = db.Column(db.String(255))
 
-class clientCode(db.Model):
-    __tablename__ = "clientcode"
+class Codedata(db.Model):
+    __tablename__ = "codedata"
     id = db.Column(db.Integer, primary_key=True,autoincrement=True)
-    clientID = db.Column(db.String(255),nullable=False)
-    code = db.Column(db.String(255))
+    code = db.Column(db.String(255),nullable=False)
+    uid = db.Column(db.String(255),nullable=False)
+    uemail = db.Column(db.String(255),nullable=False)
 
 if __name__ == '__main__':
     db.create_all()
-    app.run(debug=True)
+    #app.run(debug=True)
 

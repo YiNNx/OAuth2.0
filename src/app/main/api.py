@@ -2,19 +2,16 @@
 
 __author__ = 'YiNN'
 
-import json
-import mimetypes
-from types import NoneType
+import random
+import string
 
-from werkzeug import Response
 from app import config
 from app.form import *
-from app.main.models import Info, OAuth, Users, clientCode 
-from flask import Flask, jsonify, make_response, redirect, render_template, request
+from app.main.models import Codedata, Info, OAuth, Users, clientCode
+from app.main.token import check_token, generate_token
+from flask import Flask, jsonify, make_response, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
-import random 
-import string
 
 app = Flask(__name__,template_folder='../templates')
 app.config.from_object(config)
@@ -148,7 +145,7 @@ def oauthshow():
             result = check_password_hash(user.pword_hash,password)
             if result:
                 code_=''.join(random.sample(string.ascii_letters+string.digits,20))
-                clientcode = clientCode(clientID = client_id,code = code_)
+                clientcode = clientCode(uemail=email,code = code_)
                 db.session.add(clientcode)
                 db.session.commit()
                 response_info = {'code': code_}
@@ -160,62 +157,47 @@ def oauthshow():
                 response.headers = headers
                 return response
             else:
-                return '用户名或密码异常'
+                return jsonify(msg='用户名或密码异常')
         else:
-            return 'clientID异常'
+            return jsonify(msg='clientID异常')
     else:
         form = LoginForm()
         return render_template("login.html",form=form)
 
 @app.route('/oauth2.0/granttoken', methods=['POST', 'GET'])
 def oauthgranttoken():
+    '''token生成api'''
     client_id=request.json.get("client_id")
     client_secrets=request.json.get("client_secrets")
     code=request.json.get("code")
     oauth=OAuth.query.filter(OAuth.clientID==client_id).first()
-    clientcode=clientCode.query.filter(clientCode.clientID==client_id).first()
-    if oauth.secrets==client_secrets and clientcode.code==code:
-        pass
-
-        
-
+    result = check_password_hash(oauth.secrets,client_secrets)
+    if not oauth or not result:
+        return jsonify(msg='client id 或 secrets异常')
+    codedata = Codedata.query.filter(Codedata.code==code).first()
+    if codedata:
+        data={}
+        data['email']=codedata.uemail
+        data['uid']=codedata.uid
+        token=generate_token(data)
+        return jsonify({'token':token})
+    else:
+        return jsonify(msg='code不存在')
 
 @app.route('/oauth2.0/getinfo', methods=['POST', 'GET'])
 def oauthgetinfo():
-    print()
-
-
-
-'''auth_code = {}
-def gen_auth_code(uri):
-    code = random.randint(1,1000)
-    auth_code[code] = uri
-    return code
-
-@app.route('/client/passport', methods=['POST', 'GET'])
-def client_passport():
-    code = request.args.get('code')
-    uri = 'http://localhost:5000/oauth?grant_type=authorization_code&code=%s&redirect_uri=%s&client_id=%s' % (code, redirect_uri, client_id)
-    return redirect(uri)
-'''
-
-
-@app.route('/client/jump',methods=['post','get'])
-def client_login():
-    # 生成响应信息
-    uri = 'http://localhost:5000/signup'
-    response_info = {'msg': '收到'}
-    # 最终对请求进行相应
-    headers = {
-        'content-type':'application/json',
-        'location':uri
+    token=request.json.get("token")
+    result=check_token(token)
+    uname=result[1]
+    info = Info.query.filter(Info.uname==uname).first()
+    userInfo = {
+        'uname':info.uname,
+        'email':info.email,
+        'nickname':info.nickname,
+        'avator':info.avator,
+        'intro':info.intro
     }
-    # 使浏览器识别返回内容为字符串而不是html
-    response = make_response(response_info)
-    # 浏览器接收到301状态码之后，会在headers中寻找location以重定向
-    #response.headers = headers
-    return (response,302,headers)
-
+    return jsonify(userInfo)
 
 if __name__=='__main__':
     app.run()

@@ -1,4 +1,4 @@
-' 生成token与code的函数 '
+' 生成与验证token的函数 '
 
 __author__ = 'YiNN'
 
@@ -6,11 +6,10 @@ from typing import Dict
 from itsdangerous import TimedJSONWebSignatureSerializer as TJWSSerializer
 from itsdangerous import BadData
 
-secret_key= 'afesjyrtrw6457t'
-expires_in = 360   # 有效期单位为秒
-
-def generate_code(data:Dict):
-	""" 生成code """
+def generate_token(data:Dict):
+	""" 生成token """
+	secret_key= 'afesjyrtrw6457t'
+	expires_in = 600 
 	# serializer = TJWSSerializer(秘钥, 有效期单位为秒)
 	serializer = TJWSSerializer(secret_key, expires_in )
 	
@@ -23,21 +22,16 @@ def generate_code(data:Dict):
 
 
 # 检验token(secret和有效期(expires_in)需要与生成时一致)
-def check_token(token):
+def check_token(code):
 	# 验证失败，会抛出itsdangerous.BadData异常
+    secret_key= 'afesjyrtrw6457t'
+    expires_in = 600
     serializer = TJWSSerializer(secret_key, expires_in )
     try:
 		# 获取解密后的数据 bytes:dict
-        data = serializer.loads(token)
+        data = serializer.loads(code)
     except BadData:
         return None
     else:
-        user_id = data.get('id')
-        user_email = data.get('email')
-        try:
-            user = User.objects.get(id=user_id,email=user_email)
-        except User.DoesNotExist:
-            return None
-        else:
-        	return user
+        return [data.get('id'),data.get('email')]
 
