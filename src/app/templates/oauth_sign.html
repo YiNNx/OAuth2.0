@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<h2>注册OAuth2.0服务</h2>
+<form action="/oauth2.0/sign" method="POST">
+
+<p>服务名：</p>
+<p>{{form.appName}} {{form.appName.errors[0] }}</p>
+
+<p>主页URL：</p>
+<p> {{form.homeURL}} {{form.homeURL.errors[0] }}</p>
+
+<p>应用描述：</p>
+<p> {{form.appDesc}} {{form.appDesc.errors[0] }}</p>
+
+<p>回调链接：</p>
+<p> {{form.backURL}} {{form.backURL.errors[0] }}</p>
+
+<p>添加Client secrets：</p>
+<p> {{form.secrets}} {{form.secrets.errors[0] }}</p>
+
+<input type="submit" value="注册">
+</form>
+</body>
+</html>

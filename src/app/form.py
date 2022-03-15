@@ -99,4 +99,44 @@ class InfoForm(Form):
         render_kw={"class":"form-control"}  #设置属性生成的html属性
     )
 
+class OAuthSignForm(Form):
+    '''Form'''
+    appName = simple.StringField(
+        widget=widgets.TextInput(),
+        validators=[
+            validators.DataRequired(message="不能为空(ﾟДﾟ*)ﾉ"),
+        ],
+        render_kw={"class":"form-control"}  #设置属性生成的html属性
+    )
+
+    homeURL = simple.StringField(
+        widget=widgets.TextInput(),
+        validators=[
+            validators.DataRequired(message="不能为空(ﾟДﾟ*)ﾉ"),
+        ],
+        render_kw={"class":"form-control"}  #设置属性生成的html属性
+    )
+
+    appDesc = simple.StringField(
+        widget=widgets.TextInput(),
+        validators=[
+            validators.DataRequired(message="不能为空(ﾟДﾟ*)ﾉ"),
+        ],
+        render_kw={"class":"form-control"}  #设置属性生成的html属性
+    )
     
+    backURL = simple.StringField(
+        widget=widgets.TextInput(),
+        validators=[
+            validators.DataRequired(message="不能为空(ﾟДﾟ*)ﾉ"),
+        ],
+        render_kw={"class":"form-control"}  #设置属性生成的html属性
+    )
+
+    secrets = simple.StringField(
+        widget=widgets.TextInput(),
+        validators=[
+            validators.DataRequired(message="不能为空(ﾟДﾟ*)ﾉ"),
+        ],
+        render_kw={"class":"form-control"}  #设置属性生成的html属性
+    )
