@@ -7,7 +7,6 @@ from flask import Flask
 
 app = Flask(__name__)
 
-# 设置数据库的链接信息
 app.config["SQLALCHEMY_DATABASE_URI"] ="mysql://root:080502@127.0.0.1:3306/bangumoe"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -24,7 +23,8 @@ class Users(db.Model):
 
 class Info(db.Model):
     __tablename__ = "info"
-    uid = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    uid = db.Column(db.Integer,nullable=False)
     uname = db.Column(db.String(32),nullable=False)
     email = db.Column(db.String(511),nullable=False)
     nickname = db.Column(db.String(32),nullable=False)
@@ -52,8 +52,17 @@ class Anime(db.Model):
     __tablename__ = "anime"
     id = db.Column(db.Integer, primary_key=True,autoincrement=True)
     name=db.Column(db.String(64),nullable=False)
-    episode=(db.Integer)
-    director=name=db.Column(db.String(64))
+    episode=db.Column(db.Integer)
+    director=db.Column(db.String(64))
+
+class Collection(db.Model):
+    __tablename__='collection'
+    id=db.Column(db.Integer, primary_key=True,autoincrement=True)
+    uid = db.Column(db.Integer,nullable=False)
+    name=db.Column(db.String(64),nullable=False)
+    statu=db.Column(db.String(32),nullable=False)
+    score=db.Column(db.Integer)
+    comment=db.Column(db.String(256))
 
 if __name__ == '__main__':
     db.create_all()

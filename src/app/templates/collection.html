@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<head>
+  <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">  
+</head>
+<body>
+<div class="container">
+    <div class="form-inline">
+<input type="text" class="form-control input-sm" placeholder="查询我的收藏">
+        <button type="button" class="btn btn-default btn-sm">
+          <span class="glyphicon glyphicon-search"></span> Search
+        </button>
+        </div>
+    <br>
+</div>
+<div class="container">
+<table class="table">
+  <caption>我收藏的番剧</caption>
+  <thead>
+    <tr>
+      <th>番剧名</th>
+      <th>状态</th>
+      <th>我的评分</th>
+      <th>我的吐槽</th>
+    </tr>
+  </thead>
+  <tbody>
+        {% for collection in collections %}
+        <tr>
+            <td><a href="http://127.0.0.1:5000/anime/{{collection.name}}">{{ collection.name}}</a></td>
+            <td>{{ collection.statu }}</td>
+            <td>{{ collection.score }}</td>
+            <td>{{ collection.comment }}</td>
+        </tr>
+        {% endfor %}
+</table>
+</div>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>收藏 {{name}}</h2>
+<form action="/collecting" method="POST">
+
+<p>{{form.statu}}{{form.statu.errors[0] }}</p>
+
+<p>评分（1-10）：</p>
+<p> {{ form.score }}{{form.score.errors[0] }}</p>
+
+<p>吐槽（简评，最多200字）：</p>
+<p> {{ form.comment }}{{form.comment.errors[0] }}</p>
+
+<input type="submit" value="提交">
+</form>
+</body>
+</html>

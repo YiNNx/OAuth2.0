@@ -7,15 +7,16 @@ import random
 import string
 
 from app import config
-from app.form import *
-from app.main.models import Codedata, Info, OAuth, Users
-from app.main.token import check_token, generate_token
-from flask import Flask, Response, jsonify, make_response, redirect, render_template, request
+from app.main.form import *
+from app.main.models import Anime, Codedata, Collection, Info, OAuth, Users
+from app.main.generate import check_token, generate_token
+from flask import Flask, Response, jsonify,  redirect, render_template, request, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__,template_folder='../templates')
 app.config.from_object(config)
+app.secret_key = 'fkdjsafjdkfdlkjfadskjfadskljdsfklj'
 
 db = SQLAlchemy(app)
 
@@ -23,11 +24,16 @@ db = SQLAlchemy(app)
 
 @app.route('/')
 def index():
-    return render_template("index.html")
+    if 'uid' in session:
+        return render_template("home.html")
+    else:
+        return render_template("index.html")
 
 @app.route('/signup',methods=['GET','POST'])
 def signup():
     '''注册页面'''
+    if 'uid' in session:
+        return redirect('http://127.0.0.1:5000/')
     if request.method =="GET":
         form = SignUpForm()
         return render_template("signup.html",form=form)
@@ -35,16 +41,25 @@ def signup():
         form = SignUpForm(formdata=request.form)
         if form.validate():  # 对用户提交数据进行校验，form.data是校验完成后的数据字典
             pword_h=generate_password_hash(form.data['pword'])
+            print(form.data)
             user = Users(email = form.data['email'],pword_hash = pword_h,uname = form.data['email'])
-            uinfo = Info(email = form.data['email'],uname = form.data['email'],nickname=form.data['nickname'])
             try:
                 db.session.add(user)
-                db.session.add(uinfo)
                 db.session.commit()
                 print('succeed!')
+                session['uid'] = user.uid
             except Exception as e:
                 db.session.rollback()
                 return '注册失败,请检查你的邮箱是否注册过账号'
+            try:
+                user = Users.query.filter(Users.email==form.data['email']).first()
+                print(user.uid)
+                uinfo = Info(uid=user.uid,email = form.data['email'],uname = form.data['email'],nickname=form.data['nickname'])
+                db.session.add(uinfo)
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                return '注册失败'
             return render_template("info_signup.html")
         else:
             print(form.errors,"错误信息")
@@ -53,6 +68,8 @@ def signup():
 @app.route('/login',methods=['GET','POST'])
 def login():
     '''登录页面'''
+    if 'uid' in session:
+        return redirect('http://127.0.0.1:5000/')
     if request.method =="GET":
         form = LoginForm()
         return render_template("login.html",form=form)
@@ -63,40 +80,53 @@ def login():
             user = Users.query.filter(Users.email==form.data['email']).first()
             result = check_password_hash(user.pword_hash,form.data['pword'])
             if result:
+                session['uid'] = user.uid
                 return render_template("info_login.html")
             else:
                 return '用户名或密码错误'
         return render_template("login.html",form=form)
 
+@app.route("/logout", methods=["GET"])
+def logout():
+    """退出登录"""
+    # 清空session
+    session.clear()
+    return redirect('http://127.0.0.1:5000/')
 
 @app.route('/info',methods=['GET','POST'])
 def info():
     '''info页面'''
-    if request.method =="GET":
-        form = InfoForm()
-        return render_template("info.html",form=form)
-    else:
-        form = InfoForm(formdata=request.form)
-        if form.validate():  # 对用户提交数据进行校验，form.data是校验完成后的数据字典
-            print(form.data)
-            info = Info.query.filter(Info.email==form.data['email']).first()
-            print(info.email)
-            print(info.avator)
-            try:
-                info.nickname = form.data['nickname']
-                info.avator = form.data['avator']
-                info.intro = form.data['intro']
-                print(info.nickname,info.avator,info.intro)
-                db.session.merge(info)
-                db.session.commit()
-                print('succeed!')
-            except Exception as e:
-                db.session.rollback()
-                return '修改失败,请检查你的邮箱是否正确'
-            return "修改成功"
+    if 'uid' in session:
+        if request.method =="GET":
+            form = InfoForm()
+            return render_template("info.html",form=form)
         else:
-            print(form.errors,"错误信息")
-        return "输入异常"
+            form = InfoForm(formdata=request.form)
+            if form.validate():  # 对用户提交数据进行校验，form.data是校验完成后的数据字典
+                print(form.data)
+                info = Info.query.filter(Info.email==form.data['email']).first()
+                if info.uid!=session['uid']:
+                    return 'email错误'
+                print(info.email)
+                print(info.avator)
+                try:
+                    info.nickname = form.data['nickname']
+                    info.avator = form.data['avator']
+                    info.intro = form.data['intro']
+                    print(info.nickname,info.avator,info.intro)
+                    db.session.merge(info)
+                    db.session.commit()
+                    print('succeed!')
+                except Exception as e:
+                    db.session.rollback()
+                    return '修改失败,请检查你的邮箱是否正确'
+                return "修改成功"
+            else:
+                print(form.errors,"错误信息")
+            return "输入异常"
+    else:
+        return '''<p>请先<a href="http://127.0.0.1:5000/login">登录</a></p>'''
+
 
 '''OAuth2.0'''
 
@@ -129,7 +159,7 @@ def oauthsign():
             return "成功！你的Client ID为 %s"%cid
         else:
             print(form.errors,"错误信息")
-        return render_template("oauthSign.html",form=form)
+        return render_template("oauth_sign.html",form=form)
 
 def jsonResponseFactory(data):
     '''Return a callable in top of Response'''
@@ -149,6 +179,8 @@ def oauthshow():
             email =request.json.get('email')
             password =request.json.get('password')
             user = Users.query.filter(Users.email==email).first()
+            if not user:
+                return jsonify(msg='user email error')
             result = check_password_hash(user.pword_hash,password)
             if result:
                 code_=''.join(random.sample(string.ascii_letters+string.digits,20))
@@ -209,6 +241,61 @@ def oauthgetinfo():
         return jsonify(userInfo)
     else:
         return jsonify(msg='token异常')
+
+''' 番剧收藏 '''
+
+@app.route('/collection', methods=['POST', 'GET'])
+def anime():
+    if 'uid' not in session:
+        return '请先登录'
+    collection = Collection.query.filter(Collection.uid==session['uid']).all()
+    print(collection)
+    return render_template('collection.html',collections=collection)
+
+@app.route('/anime', methods=['POST', 'GET'])
+def allanimes():
+    animes = Anime.query.filter().all()
+    return render_template('allanimes.html',animes=animes)
+
+@app.route('/anime/<name>', methods=['POST', 'GET'])
+def animeshow(name):
+    anime = Anime.query.filter(Anime.name==name).first()
+    session['anime']=name
+    if not anime:
+        return '页面走丢了'
+    return render_template('anime.html',anime=anime)
+
+@app.route('/collecting', methods=['POST', 'GET'])
+def collectit():
+    if request.method =="GET":
+        if not session['anime']:
+            return 'page not found'
+        form=CollectForm()
+        name=session['anime']
+        return render_template('collecting.html',name=name,form=form)
+    else:
+        form = CollectForm(formdata=request.form)
+        if form.validate():
+            collection = Collection(
+                uid = session['uid'],
+                name = session['anime'],
+                statu = form.data['statu'],
+                score = form.data['score'],
+                comment = form.data['comment']
+                )
+            try:
+                db.session.add(collection)
+                db.session.commit()
+                print('succeed!')
+            except Exception as e:
+                db.session.rollback()
+                return '收藏失败'
+            return "成功！"
+        else:
+            print(form.errors,"错误信息")
+
+            #session.pop('anime')
+        return 'succeed'
 
 if __name__=='__main__':
     app.run()

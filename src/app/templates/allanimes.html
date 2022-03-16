@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<head>
+  <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">  
+</head>
+<body>
+<div class="container">
+    <div class="form-inline">
+<input type="text" class="form-control input-sm" placeholder="搜索番剧">
+        <button type="button" class="btn btn-default btn-sm">
+          <span class="glyphicon glyphicon-search"></span> Search
+        </button>
+        </div>
+    <br>
+</div>
+<div class="container">
+<table class="table">
+  <caption>番剧</caption>
+  <thead>
+    <tr>
+      <th>番剧名</th>
+      <th>集数</th>
+      <th>导演</th>
+    </tr>
+  </thead>
+  <tbody>
+        {% for anime in animes %}
+        <tr>
+            <td><a href="http://127.0.0.1:5000/anime/{{anime.name}}">{{ anime.name}}</a></td>
+            <td>{{ anime.episode }}</td>
+            <td>{{ anime.director }}</td>
+        </tr>
+        {% endfor %}
+</table>
+</div>
+</body>
+</html>
