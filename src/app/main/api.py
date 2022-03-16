@@ -1,15 +1,16 @@
-' 实现最基本的⽤⼾注册登录和修改信息的API。 '
+' ⽤⼾注册登录 & OAuth2.0 API '
 
 __author__ = 'YiNN'
 
+import json
 import random
 import string
 
 from app import config
 from app.form import *
-from app.main.models import Codedata, Info, OAuth, Users, clientCode
+from app.main.models import Codedata, Info, OAuth, Users
 from app.main.token import check_token, generate_token
-from flask import Flask, jsonify, make_response, render_template, request
+from flask import Flask, Response, jsonify, make_response, redirect, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -130,6 +131,12 @@ def oauthsign():
             print(form.errors,"错误信息")
         return render_template("oauthSign.html",form=form)
 
+def jsonResponseFactory(data):
+    '''Return a callable in top of Response'''
+    def callable(response=None, *args, **kwargs):
+        '''Return a response with JSON data from factory context'''
+        return Response(json.dumps(data), *args, **kwargs)
+    return callable
 
 @app.route('/oauth2.0/show', methods=['POST', 'GET'])
 def oauthshow():
@@ -145,35 +152,35 @@ def oauthshow():
             result = check_password_hash(user.pword_hash,password)
             if result:
                 code_=''.join(random.sample(string.ascii_letters+string.digits,20))
-                clientcode = clientCode(uemail=email,code = code_)
-                db.session.add(clientcode)
+                codedata = Codedata(code = code_,uemail=email,uid=user.uid)
+                db.session.add(codedata)
                 db.session.commit()
                 response_info = {'code': code_}
-                headers = {
-                    'content-type':'application/json',
-                    'location': redirect_url
-                }
-                response = make_response(response_info,302)
-                response.headers = headers
-                return response
+                return redirect(
+                        redirect_url,
+                        302,
+                        jsonResponseFactory(response_info)
+                    )
             else:
-                return jsonify(msg='用户名或密码异常')
+                return jsonify(msg='user id/password error')
         else:
-            return jsonify(msg='clientID异常')
+            return jsonify(msg='clientID or backURL error')
     else:
         form = LoginForm()
         return render_template("login.html",form=form)
 
 @app.route('/oauth2.0/granttoken', methods=['POST', 'GET'])
 def oauthgranttoken():
-    '''token生成api'''
+    '''生成token的api'''
     client_id=request.json.get("client_id")
     client_secrets=request.json.get("client_secrets")
     code=request.json.get("code")
     oauth=OAuth.query.filter(OAuth.clientID==client_id).first()
+    if not oauth :
+        return jsonify(msg='client id error')
     result = check_password_hash(oauth.secrets,client_secrets)
-    if not oauth or not result:
-        return jsonify(msg='client id 或 secrets异常')
+    if not result:
+        return jsonify(msg='client secrets error')
     codedata = Codedata.query.filter(Codedata.code==code).first()
     if codedata:
         data={}
@@ -182,22 +189,26 @@ def oauthgranttoken():
         token=generate_token(data)
         return jsonify({'token':token})
     else:
-        return jsonify(msg='code不存在')
+        return jsonify(msg='code异常')
 
 @app.route('/oauth2.0/getinfo', methods=['POST', 'GET'])
 def oauthgetinfo():
+    '''获取用户信息的API'''
     token=request.json.get("token")
     result=check_token(token)
-    uname=result[1]
-    info = Info.query.filter(Info.uname==uname).first()
-    userInfo = {
-        'uname':info.uname,
-        'email':info.email,
-        'nickname':info.nickname,
-        'avator':info.avator,
-        'intro':info.intro
-    }
-    return jsonify(userInfo)
+    if result:
+        uname=result[1]
+        info = Info.query.filter(Info.uname==uname).first()
+        userInfo = {
+            'uname':info.uname,
+            'email':info.email,
+            'nickname':info.nickname,
+            'avator':info.avator,
+            'intro':info.intro
+        }
+        return jsonify(userInfo)
+    else:
+        return jsonify(msg='token异常')
 
 if __name__=='__main__':
     app.run()

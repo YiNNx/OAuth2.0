@@ -33,5 +33,16 @@ def check_token(code):
     except BadData:
         return None
     else:
-        return [data.get('id'),data.get('email')]
+        user_id = data.get('uid')
+        user_email = data.get('email')
+        return [user_id,user_email]
 
+if __name__=='__main__':
+    '''test'''
+    data={}
+    data['uid']='345'
+    data['email']='123'
+    token=generate_token(data)
+    print(token)
+    check=check_token(token)
+    print(check)

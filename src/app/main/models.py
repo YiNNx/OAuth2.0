@@ -48,6 +48,13 @@ class Codedata(db.Model):
     uid = db.Column(db.String(255),nullable=False)
     uemail = db.Column(db.String(255),nullable=False)
 
+class Anime(db.Model):
+    __tablename__ = "anime"
+    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    name=db.Column(db.String(64),nullable=False)
+    episode=(db.Integer)
+    director=name=db.Column(db.String(64))
+
 if __name__ == '__main__':
     db.create_all()
     #app.run(debug=True)
