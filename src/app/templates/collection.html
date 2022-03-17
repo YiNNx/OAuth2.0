@@ -5,11 +5,12 @@
 <body>
 <div class="container">
     <div class="form-inline">
-<input type="text" class="form-control input-sm" placeholder="查询我的收藏">
-        <button type="button" class="btn btn-default btn-sm">
-          <span class="glyphicon glyphicon-search"></span> Search
-        </button>
-        </div>
+      <form method="post" action="/collection">
+        <input type="text" name="content" id="content" placeholder="查询我的收藏">
+        <input type="submit" value="search">
+      </form>
+
+    </div>
     <br>
 </div>
 <div class="container">

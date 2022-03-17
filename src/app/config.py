@@ -4,7 +4,7 @@ __author__ = 'YiNN'
 
 DEBUG = True
 TESTING = False
-SECRET_KEY = b"A_VERY_SECRET_BYTES"
+SECRET_KEY = "dfdhtdgjhgj446rdh4lfgssrr88"
 LOGGER_NAME = "appname"
 SQLALCHEMY_DATABASE_URI = "mysql://root:080502@127.0.0.1:3306/bangumoe"
 SQLALCHEMY_TRACK_MODIFICATIONS = False

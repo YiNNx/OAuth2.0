@@ -144,19 +144,21 @@ class OAuthSignForm(Form):
 class CollectForm(Form):
     statu = RadioField(
         choices=[ ('想看', '想看'),('在看', '在看'), ('看过', '看过'), ('搁置', '搁置'), ('抛弃', '抛弃')],
-        validators=[validators.DataRequired()]
+        validators=[validators.DataRequired(message="不能为空(ﾟДﾟ*)ﾉ")]
     )
 
     score = IntegerField(
         widget=widgets.TextInput(),
         validators=[
-            validators.NumberRange(min=1, max=10,message="超出范围了(ﾟДﾟ*)ﾉ"),
+            validators.DataRequired(message="不能为空(ﾟДﾟ*)ﾉ"),
+            validators.NumberRange(min=1, max=10,message="超出范围了(ﾟДﾟ*)ﾉ")
         ],
         render_kw={"class":"form-control"}  #设置属性生成的html属性
     )
     comment = simple.StringField(
         widget=widgets.TextInput(),
         validators=[
+            validators.DataRequired(message="不能为空(ﾟДﾟ*)ﾉ"),
             validators.Length(max=200,message="最多%(min)d字(ﾟДﾟ*)ﾉ")
         ],
         render_kw={"class":"form-control"}  #设置属性生成的html属性

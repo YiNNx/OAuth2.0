@@ -16,7 +16,6 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__,template_folder='../templates')
 app.config.from_object(config)
-app.secret_key = 'fkdjsafjdkfdlkjfadskjfadskljdsfklj'
 
 db = SQLAlchemy(app)
 
@@ -246,11 +245,16 @@ def oauthgetinfo():
 
 @app.route('/collection', methods=['POST', 'GET'])
 def anime():
-    if 'uid' not in session:
-        return '请先登录'
-    collection = Collection.query.filter(Collection.uid==session['uid']).all()
-    print(collection)
-    return render_template('collection.html',collections=collection)
+    if request.method =="GET":
+        if not session.get('uid'):
+            return '请先登录'
+        collection = Collection.query.filter(Collection.uid==session['uid']).all()
+        print(collection)
+        return render_template('collection.html',collections=collection)
+    else:
+        content = request.form.get('content')
+        collection = Collection.query.filter(Collection.name.contains(content)).all()
+        return render_template('collection.html',collections=collection)
 
 @app.route('/anime', methods=['POST', 'GET'])
 def allanimes():
@@ -268,34 +272,50 @@ def animeshow(name):
 @app.route('/collecting', methods=['POST', 'GET'])
 def collectit():
     if request.method =="GET":
-        if not session['anime']:
+        if not session.get('anime'):
             return 'page not found'
+        if not session.get('uid'):
+            return '请先<a href="http://127.0.0.1:5000/login">登录</a>'
         form=CollectForm()
         name=session['anime']
         return render_template('collecting.html',name=name,form=form)
     else:
         form = CollectForm(formdata=request.form)
         if form.validate():
-            collection = Collection(
-                uid = session['uid'],
-                name = session['anime'],
-                statu = form.data['statu'],
-                score = form.data['score'],
-                comment = form.data['comment']
-                )
-            try:
-                db.session.add(collection)
-                db.session.commit()
-                print('succeed!')
-            except Exception as e:
-                db.session.rollback()
-                return '收藏失败'
-            return "成功！"
+            collection=Collection.query.filter(Collection.uid==session['uid'], Collection.name == session['anime']).first()
+            if not collection:
+                collection = Collection(
+                    uid = session['uid'],
+                    name = session['anime'],
+                    statu = form.data['statu'],
+                    score = form.data['score'],
+                    comment = form.data['comment']
+                    )
+                try:
+                    db.session.add(collection)
+                    db.session.commit()
+                    print('succeed!')
+                except Exception as e:
+                    db.session.rollback()
+                    return '收藏失败'
+                return "收藏成功！"
+            else:
+                collection.statu = form.data['statu']
+                collection.score = form.data['score']
+                collection.comment = form.data['comment']
+                try:
+                    db.session.merge(collection)
+                    db.session.commit()
+                    print('succeed!')
+                except Exception as e:
+                    db.session.rollback()
+                    return '收藏失败'
+                return "修改成功！"
         else:
             print(form.errors,"错误信息")
 
             #session.pop('anime')
-        return 'succeed'
+            return '收藏失败'
 
 if __name__=='__main__':
     app.run()
