@@ -9,12 +9,7 @@ from itsdangerous import BadData
 def generate_token(data:Dict):
 	""" 生成token """
 	secret_key= 'afesjyrtrw6457t'
-	expires_in = 600 
-	# serializer = TJWSSerializer(秘钥, 有效期单位为秒)
-	serializer = TJWSSerializer(secret_key, expires_in )
-	
-	# serializer.dumps(数据), 返回bytes类型，比如对用户的id和email进行加密返回前端
-
+	serializer = TJWSSerializer(secret_key)
 	token = serializer.dumps(data)   # data为要加密的数据
 	token = token.decode()   # 得到返回后的带有效期和用户信息的加密token
 	
@@ -22,20 +17,38 @@ def generate_token(data:Dict):
 
 
 # 检验token(secret和有效期(expires_in)需要与生成时一致)
-def check_token(code):
-	# 验证失败，会抛出itsdangerous.BadData异常
+def check_token(token):
     secret_key= 'afesjyrtrw6457t'
-    expires_in = 600
-    serializer = TJWSSerializer(secret_key, expires_in )
+    serializer = TJWSSerializer(secret_key)
     try:
-		# 获取解密后的数据 bytes:dict
-        data = serializer.loads(code)
+        data = serializer.loads(token)
     except BadData:
         return None
     else:
         user_id = data.get('uid')
         user_email = data.get('email')
         return [user_id,user_email]
+
+def generate_user_active_token(id):
+    """ 生成用户邮箱验证token，有效期十分钟 """
+    secret_key= 'afesjyrtrw6457t'
+    expires_in = 600 
+    serializer = TJWSSerializer(secret_key, expires_in )	
+    token = serializer.dumps(id)   
+    token = token.decode()   
+    return token
+
+def check_user_active_token(token):
+    """ 验证用户邮箱验证token，有效期十分钟 """
+    secret_key= 'afesjyrtrw6457t'
+    expires_in = 6000
+    serializer = TJWSSerializer(secret_key, expires_in )
+    try:
+        id = serializer.loads(token)
+    except BadData:
+        return None
+    else:
+        return id
 
 if __name__=='__main__':
     '''test'''
@@ -46,3 +59,8 @@ if __name__=='__main__':
     print(token)
     check=check_token(token)
     print(check)
+    id=3
+    token=generate_user_active_token(id)
+    result=check_user_active_token(token)
+    print(token)
+    print(result)

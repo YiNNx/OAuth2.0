@@ -62,6 +62,14 @@ class SignUpForm(Form):
         render_kw={"class":"form-control"}  #设置属性生成的html属性
     )
 
+    vericode = simple.StringField(
+        widget=widgets.TextInput(),
+        validators=[
+            validators.DataRequired(message="不能为空(ﾟДﾟ*)ﾉ"),
+        ],
+        render_kw={"class":"form-control"}  #设置属性生成的html属性
+    )
+
 class InfoForm(Form):
     '''Form'''
     
