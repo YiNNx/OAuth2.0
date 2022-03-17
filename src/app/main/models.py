@@ -2,6 +2,7 @@
 
 __author__ = 'YiNN'
 
+from email.policy import default
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
 
@@ -20,6 +21,7 @@ class Users(db.Model):
     uname = db.Column(db.String(32),nullable=False,unique=True)
     email = db.Column(db.String(64),nullable=False,unique=True)
     pword_hash = db.Column(db.String(511),nullable=False,index=True)
+    statu = db.Column(db.Integer,nullable=False,default=0)
 
 class Info(db.Model):
     __tablename__ = "info"

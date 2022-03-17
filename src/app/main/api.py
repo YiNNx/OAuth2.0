@@ -9,7 +9,7 @@ import string
 from app import config
 from app.main.form import *
 from app.main.models import Anime, Codedata, Collection, Info, OAuth, Users
-from app.main.generate import check_token, check_user_active_token, generate_token
+from app.main.generate import check_token, check_user_active_token, generate_token, generate_user_active_token
 from flask import Flask, Response, jsonify,  redirect, render_template, request, session
 from flask_mail import Mail,Message
 from flask_sqlalchemy import SQLAlchemy
@@ -22,6 +22,33 @@ db = SQLAlchemy(app)
 
 mail = Mail()
 mail.init_app(app)
+
+'''邮箱验证'''
+
+def send_email(uid,uemail):
+    token=generate_user_active_token(uid)
+    body='请点击地址进行邮箱验证 http://127.0.0.1:5000/verify/%s'%token
+    message = Message(subject='欢迎加入 Bangumoe！',recipients=[uemail],body=body)
+    try:
+        mail.send(message)
+        print('succeed')
+    except Exception as e:
+        print(e)
+        return jsonify(msg='邮件发送失败')
+
+@app.route('/verify/<token>')
+def verify(token):
+    uid=check_user_active_token(token)
+    user = Users.query.filter(Users.uid==uid).first()
+    if user:
+        user.statu=1
+        db.session.merge(user)
+        db.session.commit()
+        session['uid']=user.uid
+        return '''<h2>创建账号成功！</h2>
+                  <p><a href="http://127.0.0.1:5000/">主页</a></p>'''
+    else:
+        return jsonify(msg='token-time-out')
 
 '''⽤⼾注册登录和修改信息'''
 
@@ -42,29 +69,33 @@ def signup():
         return render_template("signup.html",form=form)
     else:
         form = SignUpForm(formdata=request.form)
-        if form.validate():  # 对用户提交数据进行校验，form.data是校验完成后的数据字典
+        if form.validate(): 
             pword_h=generate_password_hash(form.data['pword'])
-            print(form.data)
-            user = Users(email = form.data['email'],pword_hash = pword_h,uname = form.data['email'])
+            user = Users(
+                email = form.data['email'],
+                pword_hash = pword_h,
+                uname = form.data['email']
+                )
             try:
                 db.session.add(user)
                 db.session.commit()
-                print('succeed!')
-                session['uid'] = user.uid
-            except Exception as e:
-                db.session.rollback()
-                return '注册失败,请检查你的邮箱是否注册过账号'
-            try:
                 user = Users.query.filter(Users.email==form.data['email']).first()
-                print(user.uid)
-                uinfo = Info(uid=user.uid,email = form.data['email'],uname = form.data['email'],nickname=form.data['nickname'])
+                uinfo = Info(
+                    uid=user.uid,
+                    email = form.data['email'],
+                    uname = form.data['email'],
+                    nickname=form.data['nickname']
+                    )
                 db.session.add(uinfo)
                 db.session.commit()
             except Exception as e:
                 db.session.rollback()
-                return '注册失败'
-            return '''<h2>创建账号成功！</h2>
-                      <p><a href="http://127.0.0.1:5000/">主页</a></p>'''
+                return jsonify(msg='注册失败,请检查你的邮箱是否注册过账号')
+            '''接下来进行邮箱验证'''
+            send_email(user.uid,user.email)
+            return '''<h2>激活 Bangumoe 账户</h2>
+                    感谢注册 Bangumoe，在开始使用前你需要激活你的 Bangumoe 账户。
+                    包含激活链接的邮件已发送至 %s。请根据邮件提示进行激活操作。'''%user.email
         else:
             print(form.errors,"错误信息")
         return render_template("signup.html",form=form)
@@ -84,11 +115,13 @@ def login():
             user = Users.query.filter(Users.email==form.data['email']).first()
             result = check_password_hash(user.pword_hash,form.data['pword'])
             if result:
+                if user.statu==0:
+                    return "该账户未激活"
                 session['uid'] = user.uid
                 return '''<h2>登录成功！</h2>
 	                      <p><a href="http://127.0.0.1:5000/">主页</a></p>'''
             else:
-                return '用户名或密码错误'
+                return jsonify(msg='用户名或密码错误')
         return render_template("login.html",form=form)
 
 @app.route("/logout", methods=["GET"])
@@ -111,7 +144,7 @@ def info():
                 print(form.data)
                 info = Info.query.filter(Info.email==form.data['email']).first()
                 if info.uid!=session['uid']:
-                    return 'email错误'
+                    return jsonify(msg='email错误')
                 print(info.email)
                 print(info.avator)
                 try:
@@ -124,32 +157,14 @@ def info():
                     print('succeed!')
                 except Exception as e:
                     db.session.rollback()
-                    return '修改失败,请检查你的邮箱是否正确'
-                return "修改成功"
+                    return jsonify(msg='修改失败,请检查你的邮箱是否正确')
+                return jsonify(msg="修改成功")
             else:
                 print(form.errors,"错误信息")
-            return "输入异常"
+            return jsonify(msg="输入异常")
     else:
         return '''<p>请先<a href="http://127.0.0.1:5000/login">登录</a></p>'''
 
-
-'''邮箱验证'''
-
-@app.route('/verify')
-def email_send_charactor():
-    message = Message(subject='verify your email',recipients=['2436201947@qq.com'],body='你的验证码为%s'%veri)
-    try:
-        mail.send(message)
-        return 'ok'
-    except Exception as e:
-        print(e)
-        return 'error'
-
-@app.route('/verify/<token>')
-def verify(token):
-    uid=check_user_active_token(token)
-    if uid==session.get('uid'):
-        pass
 
 
 '''OAuth2.0'''
@@ -179,7 +194,7 @@ def oauthsign():
                 print('succeed!')
             except Exception as e:
                 db.session.rollback()
-                return '注册失败'
+                return jsonify(msg='注册失败')
             return "成功！你的Client ID为 %s"%cid
         else:
             print(form.errors,"错误信息")
@@ -284,14 +299,14 @@ def animeshow(name):
     anime = Anime.query.filter(Anime.name==name).first()
     session['anime']=name
     if not anime:
-        return '页面走丢了'
+        return jsonify(msg='page not found')
     return render_template('anime.html',anime=anime)
 
 @app.route('/collecting', methods=['POST', 'GET'])
 def collectit():
     if request.method =="GET":
         if not session.get('anime'):
-            return 'page not found'
+            return jsonify(msg='page not found')
         if not session.get('uid'):
             return '请先<a href="http://127.0.0.1:5000/login">登录</a>'
         form=CollectForm()
@@ -315,7 +330,7 @@ def collectit():
                     print('succeed!')
                 except Exception as e:
                     db.session.rollback()
-                    return '收藏失败'
+                    return jsonify(msg='收藏失败')
                 return """收藏成功！<a href="http://127.0.0.1:5000/collection">查看我的收藏</a>"""
             else:
                 collection.statu = form.data['statu']
@@ -327,19 +342,19 @@ def collectit():
                     print('succeed!')
                 except Exception as e:
                     db.session.rollback()
-                    return '收藏失败'
+                    return jsonify(msg='收藏失败')
                 return """修改成功！<a href="http://127.0.0.1:5000/collection">查看我的收藏</a>"""
         else:
             print(form.errors,"错误信息")
 
             #session.pop('anime')
-            return '收藏失败'
+            return jsonify(msg='收藏失败')
 
 @app.route('/collection', methods=['POST', 'GET'])
 def anime():
     if request.method =="GET":
         if not session.get('uid'):
-            return '请先登录'
+            return jsonify(msg='请先登录')
         collection = Collection.query.filter(Collection.uid==session['uid']).all()
         print(collection)
         return render_template('collection.html',collections=collection)
