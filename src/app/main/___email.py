@@ -20,5 +20,10 @@ def email_send_charactor():
         print(e)
         return 'error'
 
-if __name__ == '__main__':
-    app.run(debug=True)
+def generate_confirmation_token(expiration=3600):
+        '''
+            加密确认码
+        '''
+        s = Serializer(current_app.config['SECRET_KEY'],expiration)
+        return s.dumps({'confirm':self.id})
+    

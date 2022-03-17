@@ -2,18 +2,30 @@
 
 __author__ = 'YiNN'
 
+import http
 import json
 import random
 import string
 
 from app import config
 from app.main.form import *
-from app.main.models import Anime, Codedata, Collection, Info, OAuth, Users
-from app.main.generate import check_token, check_user_active_token, generate_token, generate_user_active_token
+from app.main.models import Anime,  Collection, Info, OAuth, Users
+from app.main.generate import check_code, check_token, check_user_active_token, generate_code, generate_token, generate_user_active_token
 from flask import Flask, Response, jsonify,  redirect, render_template, request, session
 from flask_mail import Mail,Message
+from urllib import parse as url_parse
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
+
+APP_ID = 'bgm22106232fa6225d8a'
+APP_SECRET = '7402491845d1b66ce1360c33293b472a'
+WEBSITE_BASE = 'http://http://127.0.0.1:5000/'
+CALLBACK_URL = 'http://127.0.0.1:5000/oauth/redirect'
+USER_AUTH_URL = 'https://bgm.tv/oauth/authorize?' + url_parse.urlencode({
+    'client_id': APP_ID,
+    'response_type': 'code',
+    'redirect_uri': CALLBACK_URL,
+})
 
 app = Flask(__name__,template_folder='../templates')
 app.config.from_object(config)
@@ -95,7 +107,7 @@ def signup():
             send_email(user.uid,user.email)
             return '''<h2>激活 Bangumoe 账户</h2>
                     感谢注册 Bangumoe，在开始使用前你需要激活你的 Bangumoe 账户。
-                    包含激活链接的邮件已发送至 %s。请根据邮件提示进行激活操作。'''%user.email
+                    包含激活链接的邮件已发送至 %s，该链接有效期为十分钟。请根据邮件提示进行激活操作。'''%user.email
         else:
             print(form.errors,"错误信息")
         return render_template("signup.html",form=form)
@@ -166,8 +178,41 @@ def info():
         return '''<p>请先<a href="http://127.0.0.1:5000/login">登录</a></p>'''
 
 
+'''OAuth2.0 Client'''
 
-'''OAuth2.0'''
+@app.route('/oauth/login')
+def oauth_login():
+    return redirect(USER_AUTH_URL)
+
+@app.route('/oauth/redirect')
+def oauth_callback():
+    code = request.args.get('code')
+    conn = http.client.HTTPSConnection("bgm.tv")
+    payload = json.dumps({
+      "grant_type": "authorization_code",
+      "client_id": APP_ID,
+      "client_secret": APP_SECRET,
+      "code": code,
+      "redirect_uri": CALLBACK_URL
+    })
+    headers = {
+      'Content-Type': 'application/json',
+      'Cookie': 'chii_sec_id=O42uIqoA4WwTds0aDtt4UXbic3GrzTcsu8vIDhm9; chii_sid=1OoXmD'
+    }
+    conn.request("POST", "/oauth/access_token", payload, headers)
+    res = conn.getresponse()
+    raw_data = res.read()
+    encoding = res.info().get_content_charset('utf8')
+    data = json.loads(raw_data.decode(encoding))
+    access_token=data['access_token']
+    '''获得token，进行用户数据导入'''
+    uid=session['uid']
+    user = Users.query.filter(Users.uid==uid).first()
+    user.access_token=access_token
+    return '账号绑定成功！'
+
+
+'''OAuth2.0 server'''
 
 @app.route('/oauth2.0/sign',methods=['GET','POST'])
 def oauthsign():
@@ -222,11 +267,8 @@ def oauthshow():
                 return jsonify(msg='user email error')
             result = check_password_hash(user.pword_hash,password)
             if result:
-                code_=''.join(random.sample(string.ascii_letters+string.digits,20))
-                codedata = Codedata(code = code_,uemail=email,uid=user.uid)
-                db.session.add(codedata)
-                db.session.commit()
-                response_info = {'code': code_}
+                code_=generate_code(user.uid)
+                response_info = {'code': code_,'uid':user.uid}
                 return redirect(
                         redirect_url,
                         302,
@@ -252,15 +294,16 @@ def oauthgranttoken():
     result = check_password_hash(oauth.secrets,client_secrets)
     if not result:
         return jsonify(msg='client secrets error')
-    codedata = Codedata.query.filter(Codedata.code==code).first()
-    if codedata:
+    codedata = check_code(code)
+    user=Users.query.filter(Users.uid==codedata).first()
+    if user:
         data={}
-        data['email']=codedata.uemail
-        data['uid']=codedata.uid
+        data['email']=user.email
+        data['uid']=user.uid
         token=generate_token(data)
         return jsonify({'token':token})
     else:
-        return jsonify(msg='code异常')
+        return jsonify(msg='code异常',code=code,codedata=codedata)
 
 @app.route('/oauth2.0/getinfo', methods=['POST', 'GET'])
 def oauthgetinfo():

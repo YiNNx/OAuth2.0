@@ -4,6 +4,7 @@ __author__ = 'YiNN'
 
 DEBUG = True
 TESTING = False
+JSONIFY_PRETTYPRINT_REGULAR = True
 
 SECRET_KEY = "dfdhtdgjhgj446rdh4lfgssrr88"
 LOGGER_NAME = "bangumoe"

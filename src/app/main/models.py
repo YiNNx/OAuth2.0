@@ -22,7 +22,8 @@ class Users(db.Model):
     email = db.Column(db.String(64),nullable=False,unique=True)
     pword_hash = db.Column(db.String(511),nullable=False,index=True)
     statu = db.Column(db.Integer,nullable=False,default=0)
-
+    access_token = db.Column(db.String(64),default='0')
+    
 class Info(db.Model):
     __tablename__ = "info"
     id = db.Column(db.Integer, primary_key=True,autoincrement=True)
@@ -43,13 +44,13 @@ class OAuth(db.Model):
     clientID = db.Column(db.String(255))
     secrets = db.Column(db.String(255))
 
-class Codedata(db.Model):
+'''class Codedata(db.Model):
     __tablename__ = "codedata"
     id = db.Column(db.Integer, primary_key=True,autoincrement=True)
     code = db.Column(db.String(255),nullable=False)
     uid = db.Column(db.String(255),nullable=False)
     uemail = db.Column(db.String(255),nullable=False)
-
+'''
 class Anime(db.Model):
     __tablename__ = "anime"
     id = db.Column(db.Integer, primary_key=True,autoincrement=True)
