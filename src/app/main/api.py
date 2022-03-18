@@ -157,7 +157,7 @@ def info():
                 print(form.data)
                 info = Info.query.filter(Info.email==form.data['email']).first()
                 if info.uid!=session['uid']:
-                    return jsonify(msg='email错误')
+                    return jsonify(msg='email error')
                 print(info.email)
                 print(info.avator)
                 try:
@@ -170,11 +170,11 @@ def info():
                     print('succeed!')
                 except Exception as e:
                     db.session.rollback()
-                    return jsonify(msg='修改失败,请检查你的邮箱是否正确')
-                return jsonify(msg="修改成功")
+                    return jsonify(msg='error')
+                return "succeed!"
             else:
                 print(form.errors,"错误信息")
-            return jsonify(msg="输入异常")
+            return jsonify(msg="input error")
     else:
         return '''<p>请先<a href="http://127.0.0.1:5000/login">登录</a></p>'''
 

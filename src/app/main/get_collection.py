@@ -341,12 +341,13 @@ def switch_type(type):
 
 
 if __name__=="__main__":
-      data=get_collections("62d6d28cb07bd85fb6d7174d58670e66a442c5c1")
+      data=get_collections("643848b2b58c61136476790c4aa24cae389dc664")
       datalist=data['data']
-      for item in datalist:
-            print(get_anime_name(item['subject_id']))
-            print(switch_type(item['type']))
-            print(item['rate'])
-            print(item['comment'])
-            pass
+      print(datalist)
+      #for item in datalist:
+      #      print(get_anime_name(item['subject_id']))
+      #      print(switch_type(item['type']))
+      #      print(item['rate'])
+      #      print(item['comment'])
+      #      pass
 
