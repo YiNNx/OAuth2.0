@@ -1,4 +1,4 @@
-' 关于Flask类对象的设置 '
+' config '
 
 __author__ = 'YiNN'
 

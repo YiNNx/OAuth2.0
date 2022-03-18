@@ -1,20 +1,21 @@
-' ⽤⼾注册登录 & OAuth2.0 API '
+' ⽤⼾注册登录 & 邮箱验证 & OAuth2.0 Server & OAuth2.0 Client '
 
 __author__ = 'YiNN'
 
+import http
 import json
 import random
 import string
+from urllib import parse as url_parse
 
-import http
 from app import config
 from app.main.form import *
+from app.main.generate import *
 from app.main.get_collection import *
-from app.main.models import Anime,  Collection, Info, OAuth, Users
-from app.main.generate import check_code, check_token, check_user_active_token, generate_code, generate_token, generate_user_active_token
-from flask import Flask, Response, jsonify,  redirect, render_template, request, session
-from flask_mail import Mail,Message
-from urllib import parse as url_parse
+from app.main.models import Anime, Collection, Info, OAuth, Users
+from flask import (Flask, Response, jsonify, redirect, render_template,
+                   request, session)
+from flask_mail import Mail, Message
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -281,7 +282,34 @@ def jsonResponseFactory(data):
 
 @app.route('/oauth2.0/show', methods=['POST', 'GET'])
 def oauthshow():
-    '''oauth授权页面'''
+    '''oauth授权'''
+    client_id = request.args.get('client_id')
+    redirect_url = request.args.get('redirect_url')
+    email=request.form.get('email')
+    password=request.form.get('password')
+    oauth=OAuth.query.filter(OAuth.clientID==client_id).first()
+    if oauth and oauth.backURL==redirect_url:
+        email =request.json.get('email')
+        password =request.json.get('password')
+        user = Users.query.filter(Users.email==email).first()
+        if not user:
+            return jsonify(msg='user email error')
+        result = check_password_hash(user.pword_hash,password)
+        if result:
+            code_=generate_code(user.uid)
+            response_info = {'code': code_}
+            return redirect(
+                    redirect_url,
+                    302,
+                    jsonResponseFactory(response_info)
+                )
+        else:
+            return jsonify(msg='user id/password error')
+    else:
+        return jsonify(msg='clientID or backURL error')
+'''
+@app.route('/oauth2.0/show', methods=['POST', 'GET'])
+def oauthshow():
     if request.get_json():
         client_id=request.json.get("client_id")
         redirect_url=request.json.get("redirect_url")
@@ -308,6 +336,8 @@ def oauthshow():
     else:
         form = LoginForm()
         return render_template("login.html",form=form)
+
+'''
 
 @app.route('/oauth2.0/granttoken', methods=['POST', 'GET'])
 def oauthgranttoken():

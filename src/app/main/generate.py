@@ -1,4 +1,4 @@
-' 生成与验证token的函数 '
+' 生成与验证token '
 
 __author__ = 'YiNN'
 

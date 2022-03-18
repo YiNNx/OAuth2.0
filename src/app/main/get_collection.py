@@ -1,3 +1,7 @@
+' 利用bangumi的api通过access_token导入用户数据 '
+
+__author__ = 'YiNN'
+
 import http.client
 import json
 
@@ -351,3 +355,17 @@ if __name__=="__main__":
       #      print(item['comment'])
       #      pass
 
+'''
+[
+    {'updated_at': '2022-03-18T08: 37: 11Z', 'comment': 'test1', 'tags': [], 'subject_id': 1428, 'ep_status': 0, 'vol_status': 0, 'subject_type': 2, 'type': 2, 'rate': 0, 'private': False
+    },
+    {'updated_at': '2022-03-18T08: 36: 53Z', 'comment': 'test1', 'tags': [], 'subject_id': 10639, 'ep_status': 0, 'vol_status': 0, 'subject_type': 2, 'type': 1, 'rate': 0, 'private': False
+    },
+    {'updated_at': '2022-03-18T08: 36: 09Z', 'comment': 'test1', 'tags': [], 'subject_id': 9717, 'ep_status': 0, 'vol_status': 0, 'subject_type': 2, 'type': 2, 'rate': 9, 'private': False
+    },
+    {'updated_at': '2022-03-18T08: 35: 43Z', 'comment': 'test1', 'tags': [], 'subject_id': 3375, 'ep_status': 0, 'vol_status': 0, 'subject_type': 2, 'type': 1, 'rate': 0, 'private': False
+    },
+    {'updated_at': '2022-03-18T08: 34: 52Z', 'comment': 'test1', 'tags': [], 'subject_id': 331752, 'ep_status': 0, 'vol_status': 0, 'subject_type': 2, 'type': 3, 'rate': 7, 'private': False
+    }
+]
+'''

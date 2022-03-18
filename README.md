@@ -1,14 +1,12 @@
-
-
 > A Bingyan Internship task. Good luck to me.
 
-# bangumoe的OAuth2.0服务 
+# Bangumoe的OAuth2.0服务 
 
 提供⽤⼾注册并管理⾃⼰的基本信息的功能，同时对外提供OAuth2.0的服务。 
 
 #### 阶段⼀
 
-实现最基本的⽤⼾注册登录和修改信息的API。
+实现最基本的⽤⼾注册（邮箱验证）、登录和修改信息的API。
 
 #### 阶段⼆
 
@@ -20,7 +18,7 @@
 
 #### 阶段四
 
-提供绑定bangumi账号的API，在绑定之后，将bangumi的对应数据同步到对应⽤⼾的数据中。 
+提供绑定bangumi账号的API，在绑定之后，将bangumi的对应数据同步到对应⽤⼾的数据中。 （OAuth2.0 Client）
 
 
 
@@ -28,16 +26,10 @@
 
 1. client在`/aouth2.0/sign`注册应用，自定义密匙，获得client ID
 
-2. 进行第三方登录时，用户跳转到授权页`/oauth2.0/show`，client向`/aouth2.0/show`传递client_id和redirect_url，同时用户在授权页登录：
-
-   （实际上是无法用postman模拟发送client_id和redirect_url的，必须用户跳转：http://127.0.0.1:5000/oauth2.0/show?client_id=IPfapHgWOn58ycjMCRBD&redirect_url=http://127.0.0.1:5000/client/redirect 然后手动授权。）
+2. 进行第三方登录时，用户跳转到授权页`http://127.0.0.1:5000/oauth2.0/show?client_id=xxxxxxxx&redirect_url=http://xxxxxx/redirect`，并登录：
 
    ```
    { 
-   
-   	"client_id":"IPfapHgWOn58ycjMCRBD", 
-   
-   	"redirect_url":"http://127.0.0.1:5000/client/redirect",
    
    	"email":"2333@moe.com", 
    
@@ -57,7 +49,7 @@
    }
    ```
 
-3. client获取code后，向`/aouth2.0/granttoken`发送client_id、client_secrets和code：
+3. client获取code后，向`/oauth2.0/granttoken`发送client_id、client_secrets和code：
 
    ```
    {
@@ -109,6 +101,125 @@
 
 ## OAuth2.0 Client:
 
-用户点击”绑定第三方bangumi账号“，跳转到bangumi授权页进行授权。
+1. 用户点击”绑定第三方bangumi账号“，跳转到bangumi授权页
 
-授权后client将获取的access_token写入数据库，利用bangumi提供的api导入用户番剧收藏数据。
+   `https://bgm.tv/oauth/authorize?client_id=bgm22106232fa6225d8a&response_type=code&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2Foauth%2Fredirect`
+
+   进行授权。
+
+2. 用户成功授权后Server跳转回redirect_uri（`http://127.0.0.1:5000/oauth2.0/redirect`），并返回code。
+
+3. Client接收code，并向`https://bgm.tv/oauth/access_token`使用code换取token：
+
+   ```
+   POST https://bgm.tv/oauth/access_token
+   ```
+
+   ```
+   {
+         "grant_type": "authorization_code",
+         "client_id": 'bgm22106232fa6225d8a',
+         "client_secret": '7402491845d1b66ce1360c33293b472a',
+         "code": code,
+         "redirect_uri": 'http://127.0.0.1:5000/oauth/redirect'
+   }
+   ```
+
+   接收到Server返回的access_token：
+
+   ```json
+   {
+       "access_token":"xxxxxxxx",
+       "expires_in":604800,
+       "token_type":"Bearer",
+       "scope":null,
+       "refresh_token":"xxxxxxxx"
+       "user_id" : xxxxx
+   }
+   ```
+
+4. Client将获取的access_token写入数据库，利用bangumi提供的api导入用户番剧收藏数据。
+
+   (bangumi提供的api似乎有点bug，没法正常导出番剧评论，但番剧名和状态是可以正常导出的)
+
+## 邮箱验证：
+
+利用Flask的**Flask-Mail**扩展向用户发送验证邮件
+
+token使用itsdangerous的TimedJSONWebSignatureSerializer()生成，有效期为10分钟
+
+用户点击验证链接，server接收到token进行解析，判断uid与session中的uid是否相符，相符则验证成功
+
+## 数据库：
+
+```
++--------------------+
+| Tables_in_bangumoe |
++--------------------+
+| users              |
+| info               |
+| oauth              |
+| anime              |
+| collection         |
++--------------------+
+```
+
+users：
+
+```
++--------------+--------------+------+-----+---------+----------------+
+| Field        | Type         | Null | Key | Default | Extra          |
++--------------+--------------+------+-----+---------+----------------+
+| uid          | int          | NO   | PRI | NULL    | auto_increment |
+| uname        | varchar(32)  | NO   | UNI | NULL    |                |
+| email        | varchar(64)  | NO   | UNI | NULL    |                |
+| pword_hash   | varchar(511) | NO   | MUL | NULL    |                |
+| statu        | int          | NO   |     | 0       |                |
+| access_token | varchar(64)  | YES  |     | 0       |                |
++--------------+--------------+------+-----+---------+----------------+
+```
+
+oauth：
+
+```
++----------+--------------+------+-----+---------+----------------+
+| Field    | Type         | Null | Key | Default | Extra          |
++----------+--------------+------+-----+---------+----------------+
+| id       | int          | NO   | PRI | NULL    | auto_increment |
+| appname  | varchar(255) | NO   |     | NULL    |                |
+| homeURL  | varchar(255) | NO   |     | NULL    |                |
+| appDesc  | varchar(255) | NO   |     | NULL    |                |
+| backURL  | varchar(255) | NO   |     | NULL    |                |
+| clientID | varchar(255) | YES  |     | NULL    |                |
+| secrets  | varchar(255) | YES  |     | NULL    |                |
++----------+--------------+------+-----+---------+----------------+
+```
+
+anime：
+
+```
++----------+-------------+------+-----+---------+----------------+
+| Field    | Type        | Null | Key | Default | Extra          |
++----------+-------------+------+-----+---------+----------------+
+| id       | int         | NO   | PRI | NULL    | auto_increment |
+| name     | varchar(64) | NO   |     | NULL    |                |
+| episode  | int         | YES  |     | NULL    |                |
+| director | varchar(64) | YES  |     | NULL    |                |
++----------+-------------+------+-----+---------+----------------+
+```
+
+collection：
+
+```
++---------+--------------+------+-----+---------+----------------+
+| Field   | Type         | Null | Key | Default | Extra          |
++---------+--------------+------+-----+---------+----------------+
+| id      | int          | NO   | PRI | NULL    | auto_increment |
+| uid     | int          | NO   |     | NULL    |                |
+| name    | varchar(64)  | NO   |     | NULL    |                |
+| statu   | varchar(32)  | NO   |     | NULL    |                |
+| score   | int          | YES  |     | NULL    |                |
+| comment | varchar(256) | YES  |     | NULL    |                |
++---------+--------------+------+-----+---------+----------------+
+```
+
