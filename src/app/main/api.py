@@ -2,13 +2,14 @@
 
 __author__ = 'YiNN'
 
-import http
 import json
 import random
 import string
 
+import http
 from app import config
 from app.main.form import *
+from app.main.get_collection import *
 from app.main.models import Anime,  Collection, Info, OAuth, Users
 from app.main.generate import check_code, check_token, check_user_active_token, generate_code, generate_token, generate_user_active_token
 from flask import Flask, Response, jsonify,  redirect, render_template, request, session
@@ -107,7 +108,7 @@ def signup():
             send_email(user.uid,user.email)
             return '''<h2>激活 Bangumoe 账户</h2>
                     感谢注册 Bangumoe，在开始使用前你需要激活你的 Bangumoe 账户。
-                    包含激活链接的邮件已发送至 %s，该链接有效期为十分钟。请根据邮件提示进行激活操作。'''%user.email
+                    包含激活链接的邮件已发送至 %s（有效期为10分钟）。请根据邮件提示进行激活操作。'''%user.email
         else:
             print(form.errors,"错误信息")
         return render_template("signup.html",form=form)
@@ -209,10 +210,36 @@ def oauth_callback():
     uid=session['uid']
     user = Users.query.filter(Users.uid==uid).first()
     user.access_token=access_token
-    return '账号绑定成功！'
+    db.session.merge(user)
+    db.session.commit()
+    try:
+        load_data(uid,access_token)
+    except Exception as e:
+        return '''账号绑定成功！但数据导入似乎出现了一些问题'''
+    return '''账号绑定成功！<a href="http://127.0.0.1:5000/collection">查看我的收藏</a>'''
+
+def load_data(uid,access_token):
+    '''载入用户番剧数据'''
+    data=get_collections(access_token)
+    datalist=data['data']
+    for item in datalist:
+        collection=Collection(
+            uid=uid,
+            name=get_anime_name(item['subject_id']),
+            statu=switch_type(item['type']),
+            score=item['rate'],
+            comment=item['comment']
+        )
+        try:
+            db.session.add(collection)
+            db.session.commit()
+            print('loading succeed!')
+        except Exception as e:
+            db.session.rollback()
+            print('loading failed')
 
 
-'''OAuth2.0 server'''
+'''OAuth2.0 Server'''
 
 @app.route('/oauth2.0/sign',methods=['GET','POST'])
 def oauthsign():
@@ -268,7 +295,7 @@ def oauthshow():
             result = check_password_hash(user.pword_hash,password)
             if result:
                 code_=generate_code(user.uid)
-                response_info = {'code': code_,'uid':user.uid}
+                response_info = {'code': code_}
                 return redirect(
                         redirect_url,
                         302,

@@ -68,11 +68,10 @@ class Collection(db.Model):
     comment=db.Column(db.String(256))
 
 if __name__ == '__main__':
-    #anime=Anime(
-    #    name='辉夜大小姐想让我告白 第一季',
-    #    episode=12,
-    #    director='畠山守'
-    #)
+    user = Users.query.filter(Users.uid==14).first()
+    user.statu=1
+    db.session.merge(user)
+    db.session.commit()
     #db.session.add(anime)
     #db.session.commit()
     #db.create_all()
